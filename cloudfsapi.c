@@ -85,7 +85,7 @@ static json_object **get_elements_from_json(struct json_element *path, json_obje
       for (j=0; j<len; ++j)
       {
         json_object *child, *sub = json_object_array_get_idx(lookup_obj, j);
-	if (json_object_object_get_ex(sub, path[i].e_subkey, &child) == 0)
+        if (json_object_object_get_ex(sub, path[i].e_subkey, &child) == 0)
         {
           debugf("failed to find json element %s", path[i].e_subkey);
           free(elements);
@@ -95,15 +95,15 @@ static json_object **get_elements_from_json(struct json_element *path, json_obje
                  path[i].e_subval[0] == '\0') // special case to guess region
         {
           this_obj = sub;
-          if (!path[i+1].e_key && eid < max_elements && j+1 < len)
+          if (!path[i+1].e_key && eid < max_elements)
           {
             elements[eid++] = sub;
             continue;
           }
-          i++;
           break;
         }
       }
+      i++;
     }
     else
     {
@@ -573,14 +573,17 @@ void cloudfs_verify_ssl(int vrfy)
 static struct {
   char username[MAX_HEADER_SIZE], password[MAX_HEADER_SIZE],
       tenant[MAX_HEADER_SIZE], authurl[MAX_URL_SIZE], region[MAX_URL_SIZE],
+      projectid[MAX_HEADER_SIZE], authtoken[MAX_HEADER_SIZE],
       use_snet, auth_version;
 } reconnect_args;
 
-void cloudfs_set_credentials(char *username, char *tenant, char *password,
-                             char *authurl, char *region, int use_snet)
+void cloudfs_set_credentials(char *username, char *tenant, char *projectid, char *authtoken,
+                             char *password, char *authurl, char *region, int use_snet)
 {
   strncpy(reconnect_args.username, username, sizeof(reconnect_args.username));
   strncpy(reconnect_args.tenant, tenant, sizeof(reconnect_args.tenant));
+  strncpy(reconnect_args.projectid, projectid, sizeof(reconnect_args.projectid));
+  strncpy(reconnect_args.authtoken, authtoken, sizeof(reconnect_args.authtoken));
   strncpy(reconnect_args.password, password, sizeof(reconnect_args.password));
   strncpy(reconnect_args.authurl, authurl, sizeof(reconnect_args.authurl));
   strncpy(reconnect_args.region, region, sizeof(reconnect_args.region));
@@ -646,20 +649,27 @@ int cloudfs_connect()
   }
   else if (reconnect_args.auth_version == 3)
   {
-    if (reconnect_args.username[0] && reconnect_args.tenant[0] && reconnect_args.password[0])
+    if (reconnect_args.username[0] && reconnect_args.projectid[0] && reconnect_args.password[0])
     {
       snprintf(postdata, sizeof(postdata), "{\"auth\":{\"identity\":{"
-          "\"methods\":[\"password\"],\"password\":{\"user\":{\"id\":"
-          "\"%s\",\"password\":\"%s\"}},\"scope\":{\"project\":{\"id"
-          "\":\"%s\"}}}}}", reconnect_args.username, reconnect_args.password,
-          reconnect_args.tenant);
+          "\"methods\":[\"password\"],\"password\":{\"user\":{\"domain\":{"
+          "\"id\":\"default\"},\"name\":\"%s\",\"password\":\"%s\"}}},\"scope\":{"
+          "\"project\":{\"id\":\"%s\"}}}}", reconnect_args.username,
+          reconnect_args.password,reconnect_args.projectid);
     }
     else if (reconnect_args.username[0] && reconnect_args.password[0])
     {
       snprintf(postdata, sizeof(postdata), "{\"auth\":{\"identity\":{"
-          "\"methods\":[\"password\"],\"password\":{\"user\":{\"id\":"
-          "\"%s\",\"password\":\"%s\"}}}}}", reconnect_args.username,
-          reconnect_args.password);
+          "\"methods\":[\"password\"],\"password\":{\"user\":{\"domain\":{"
+          "\"id\":\"default\"},\"name\":\"%s\",\"password\":\"%s\"}}}}}",
+          reconnect_args.username,reconnect_args.password);
+    }
+    else if (reconnect_args.authtoken[0] && reconnect_args.projectid[0])
+    {
+    	snprintf(postdata, sizeof(postdata), "{\"auth\":{\"identity\":{"
+          "\"methods\":[\"token\"],\"token\":{\"id\":\"%s\"}},\"scope\":{"
+          "\"project\":{\"id\":\"%s\"}}}}", reconnect_args.authtoken,
+          reconnect_args.projectid);
     }
     debugf("%s", postdata);
     add_header(&headers, "Content-Type", "application/json");

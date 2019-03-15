@@ -1,3 +1,40 @@
+# cc-cloudfuse
+
+`cc-cloudfuse` mounts the Chameleon object store as a file system.
+
+The `cc-cloudfuse` tool is based on the [Cloudfuse project](https://github.com/redbo/cloudfuse), but more Chameleon friendly.
+
+## Installation
+To install `cc-cloudfuse`, run the following commands:
+
+    git clone https://github.com/ChameleonCloud/cc-cloudfuse.git
+	cd cc-cloudfuse
+	./configure
+	make
+	sudo make install
+
+## Usage
+Your Chameleon credentials are required to mount the object store. You can configure it via the Chameleon openrc file, or
+provide the credentials in the `~/.cloudfuse` file, or pass the credentials as command arguments.
+
+If using keystone v2, tenantname and username are required.
+If using keystone v3, projectid and username are reuired, or you can provide projectid and authtoken. 
+
+To mount:
+
+	cc-cloudfuse mount <mounting_dir> [options]
+	
+To learn more about the mounting options:
+	
+	cc-cloudfuse mount -h
+
+To unmount:
+	
+	cc-cloufuse unmount <mounting_dir>
+
+Please read [Chameleon user documentation](https://chameleoncloud.readthedocs.io/en/latest/technical/swift.html#mounting-object-store-as-a-file-system) for more information.
+
+## Original README
 Cloudfuse is a FUSE application which provides access to Rackspace's
 Cloud Files (or any installation of Swift).
 

@@ -18,9 +18,11 @@ all: cloudfuse
 
 install: all $(bindir)
 	$(INSTALL) cloudfuse $(bindir)/cloudfuse
+	/bin/mv cc-cloudfuse /usr/bin/cc-cloudfuse
 
 uninstall:
 	/bin/rm -f $(bindir)/cloudfuse
+	/bin/rm -f /usr/bin/cc-cloudfuse
 
 $(bindir):
 	$(MKDIR_P) $(bindir)

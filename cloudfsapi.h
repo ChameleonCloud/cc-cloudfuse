@@ -24,8 +24,8 @@ typedef struct dir_entry
 } dir_entry;
 
 void cloudfs_init();
-void cloudfs_set_credentials(char *username, char *tenant, char *password,
-                             char *authurl, char *region, int use_snet);
+void cloudfs_set_credentials(char *username, char *tenant, char *projectid, char *authtoken,
+                             char *password, char *authurl, char *region, int use_snet);
 int cloudfs_connect();
 int cloudfs_tenant_info(struct statvfs *stat);
 int cloudfs_object_read_fp(const char *path, FILE *fp);

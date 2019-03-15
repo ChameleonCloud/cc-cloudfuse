@@ -1,0 +1,17 @@
+#!/bin/bash
+
+ACTION=$1
+if [ -z "$ACTION" ]; then
+    ACTION="unknown"
+fi
+shift
+ARGS=$@
+
+if [ $ACTION == 'mount' ]; then
+  cloudfuse $ARGS
+elif [ $ACTION == 'unmount' ]; then
+  fusermount -u $ARGS
+else
+  echo "To mount, run 'cc-cloudfuse mount <mount_dir> [options]'; for more about mounting, run 'cc-cloudfuse mount -h'."
+  echo "To unmount, run 'cc-cloudfuse unmount <mount_dir>'"
+fi

@@ -428,6 +428,8 @@ char *get_home_dir()
 static struct options {
     char username[OPTION_SIZE];
     char tenant[OPTION_SIZE];
+    char projectid[OPTION_SIZE];
+    char authtoken[OPTION_SIZE];
     char password[OPTION_SIZE];
     char cache_timeout[OPTION_SIZE];
     char authurl[OPTION_SIZE];
@@ -438,6 +440,8 @@ static struct options {
     .username = "",
     .password = "",
     .tenant = "",
+    .projectid = "",
+    .authtoken = "",
     .cache_timeout = "600",
     .authurl = "https://identity.api.rackspacecloud.com/v2.0/",
     .region = "",
@@ -448,7 +452,9 @@ static struct options {
 int parse_option(void *data, const char *arg, int key, struct fuse_args *outargs)
 {
   if (sscanf(arg, " username = %[^\r\n ]", options.username) ||
-      sscanf(arg, " tenant = %[^\r\n ]", options.tenant) ||
+      sscanf(arg, " tenantname = %[^\r\n]", options.tenant) ||
+      sscanf(arg, " projectid = %[^\r\n ]", options.projectid) ||
+      sscanf(arg, " authtoken = %[^\r\n ]", options.authtoken) ||
       sscanf(arg, " api_key = %[^\r\n ]", options.password) ||
       sscanf(arg, " auth_url = %[^\r\n ]", options.authurl) ||
       sscanf(arg, " password = %[^\r\n ]", options.password) ||
@@ -469,6 +475,13 @@ int main(int argc, char **argv)
   FILE *settings;
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
 
+  if (getenv("OS_USERNAME")) {strcpy(options.username, getenv("OS_USERNAME"));}
+  if (getenv("OS_TENANT_NAME")) {strcpy(options.tenant, getenv("OS_TENANT_NAME"));}
+  if (getenv("OS_PROJECT_ID")) {strcpy(options.projectid, getenv("OS_PROJECT_ID"));}
+  if (getenv("OS_AUTH_URL")) {strcpy(options.authurl, getenv("OS_AUTH_URL"));}
+  if (getenv("OS_PASSWORD")) {strcpy(options.password, getenv("OS_PASSWORD"));}
+  if (getenv("OS_REGION_NAME")) {strcpy(options.region, getenv("OS_REGION_NAME"));}
+
   snprintf(settings_filename, sizeof(settings_filename), "%s/.cloudfuse", get_home_dir());
   if ((settings = fopen(settings_filename, "r")))
   {
@@ -482,30 +495,12 @@ int main(int argc, char **argv)
 
   cache_timeout = atoi(options.cache_timeout);
 
-  if (!*options.username || !*options.password)
-  {
-    fprintf(stderr, "Unable to determine username and API key.\n\n");
-    fprintf(stderr, "These can be set either as mount options or in"
-                    "a file named %s\n\n", settings_filename);
-    fprintf(stderr, "  username=[Account username]\n");
-    fprintf(stderr, "  api_key=[API key (or password for Keystone API)]\n\n");
-    fprintf(stderr, "The following settings are optional:\n\n");
-    fprintf(stderr, "  authurl=[Authentication url - connect to non-Rackspace Swift]\n");
-    fprintf(stderr, "  tenant=[Tenant for authentication with Keystone]\n");
-    fprintf(stderr, "  password=[Password for authentication with Keystone]\n");
-    fprintf(stderr, "  use_snet=[True to use Rackspace ServiceNet for connections]\n");
-    fprintf(stderr, "  cache_timeout=[Seconds for directory caching, default 600]\n");
-    fprintf(stderr, "  verify_ssl=[False to disable SSL cert verification]\n");
-
-    return 1;
-  }
-
   cloudfs_init();
 
   cloudfs_verify_ssl(!strcasecmp(options.verify_ssl, "true"));
 
-  cloudfs_set_credentials(options.username, options.tenant, options.password,
-                          options.authurl, options.region,
+  cloudfs_set_credentials(options.username, options.tenant, options.projectid, options.authtoken,
+                          options.password, options.authurl, options.region,
                           !strcasecmp(options.use_snet, "true"));
   if (!cloudfs_connect())
   {
