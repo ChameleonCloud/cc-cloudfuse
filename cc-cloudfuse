@@ -7,6 +7,13 @@ fi
 shift
 ARGS=$@
 
+# check auth url
+if ! [ -z ${OS_AUTH_URL:+x} ]; then
+    if [[ $OS_AUTH_URL != *?v3 ]]; then
+        OS_AUTH_URL="$OS_AUTH_URL/v3"
+    fi
+fi
+
 if [ $ACTION == 'mount' ]; then
   cloudfuse $ARGS
 elif [ $ACTION == 'unmount' ]; then
