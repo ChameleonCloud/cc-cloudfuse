@@ -20,13 +20,13 @@ function extract_json_key {
   echo "$RESULT"
 }
 
-OS_TOKEN=$(extract_json_key "instance_metrics_writer_token" "$JSON_VENDOR_DATA")
-OS_PROJECT_ID=$(extract_json_key "project_id" "$JSON_VENDOR_DATA")
-OS_AUTH_URL=$(extract_json_key "auth_url_v3" "$JSON_VENDOR_DATA")
-OS_REGION=$(extract_json_key "region" "$JSON_VENDOR_DATA")
+TOKEN=$(extract_json_key "instance_metrics_writer_token" "$JSON_VENDOR_DATA")
+PROJECT_ID=$(extract_json_key "project_id" "$JSON_VENDOR_DATA")
+AUTH_URL_V3=$(extract_json_key "auth_url_v3" "$JSON_VENDOR_DATA")
+REGION=$(extract_json_key "region" "$JSON_VENDOR_DATA")
 
 if [ $ACTION == 'mount' ]; then
-  cloudfuse $ARGS
+  cloudfuse -o authtoken="$TOKEN",projectid="$PROJECT_ID",authurl="$AUTH_URL_V3",region="$REGION" $ARGS
 elif [ $ACTION == 'unmount' ]; then
   fusermount -u $ARGS
 else
